@@ -170,6 +170,7 @@ if (length(unique(ds$id)) != 30) print("ERROR: Incomplete Dataset")
 
 # Count
 count(ds, sex)
+ds$sex <- tolower(ds$sex)
 ```
 ---
 # Simple descriptive statistics
@@ -184,14 +185,17 @@ summary(ds$temperature) #Also a nice option
 # Other helpful packages: rstatix
 
 - Pipe-friendly descriptive and inferential statistics
-- `get_summary_stats` 
+- `get_summary_stats` = flexible function for descriptive stats
+- `freq_table` = Frequency tables with proportion
+- `identify_outliers` = detects/filters outliers
+- `cor_mat` and helper functions = correlation matrices and plots
 
 ---
 # rstatix::get_summary_stats()
 ```{r}
 # Get summary stats
 ds %>% get_summary_stats(temperature) #Note that it drops NAs
-ds %>% group_by(target) %>% get_summary_stats(temperature)
+ds %>% group_by(target, sex) %>% get_summary_stats(temperature)
 ```
 
 ---
@@ -203,6 +207,27 @@ ds %>% get_summary_stats(c("temperature", "humidity"), type = "common")
 ds %>% get_summary_stats(starts_with("eyex"), type = "mean_sd")
 ```
 
+---
+# rstatix::freq_table()
+```{r}
+ds %>% freq_table(sex)
+
+ds %>% freq_table(target, sex)
+```
+---
+# rstatix::identify_outliers()
+```{r}
+if (nrow(identify_outliers(ds, temperature)) == 0) print("No temperature outliers")
+
+ds %>% identify_outliers(eyex_mean) %>% select(id, condition, eyex_mean)
+```
+---
+# rstatix::cor_mat()
+```{r}
+ds %>% cor_mat(starts_with("eyex_")) %>% pull_lower_triangle()
+
+ds %>% cor_mat(starts_with("eyex")) %>% cor_plot()
+```
 
 ---
 # Other helpful packages: DataExplorer

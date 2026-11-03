@@ -71,15 +71,19 @@ class: center, middle, inverse, title-slide
 # Today's tutorial
 
 - Ways to explore and check data
-  * `dplyr` functions like `filter()`, `summarize()`, and `count()`
-  * Helpful packages: `DataExplorer`, `rstatix`
-  * Plotting distributions using `ggplot2`
+  * Part 1: Using tools we've already covered
+  * Part 2: Using other packages: `DataExplorer`, `rstatix`
+  * Part 3: Automating `ggplot2` plots to help understand your data
  
 .content-box-blue[
 &lt;svg viewBox="0 0 496 512" style="height:1em;display:inline-block;vertical-align:-.1em;" xmlns="http://www.w3.org/2000/svg"&gt;  &lt;path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"&gt;&lt;/path&gt;&lt;/svg&gt; Follow along from the [Github repo](https://github.com/2026-PSYC-259/7-exploratory-data-analysis)
 ]
 
 .footnote[.small[.bold[Last updated: 2026-11-03]]]
+
+---
+class: inverse, center, middle
+# Part 1: EDA with tools you know
 
 ---
 # Example data for today
@@ -177,7 +181,7 @@ ds %&gt;% select(id, handedness) %&gt;% filter(!(handedness %in% c("Right", "Lef
 ```
 
 ---
-# Print descriptive warnings and errors
+# Print conditional warnings and errors
 
 ``` r
 # Filter based on expected ranges
@@ -190,7 +194,7 @@ if (nrow(check_age) &gt; 0) print(str_glue("WARNING: {nrow(check_age)} participa
 WARNING: 2 participants have ages out of the expected range
 ```
 ---
-# Print descriptive warnings and errors
+# Print conditional warnings and errors
 
 ``` r
 # Filter based a set of possible values
@@ -218,14 +222,8 @@ if (nrow(check_handedness) &gt; 0) {
 
 ``` r
 # Check the number of participant ids
-length(unique(ds$id)) # Should be 30
-```
+if (length(unique(ds$id)) != 30) print("ERROR: Incomplete Dataset")
 
-```
-[1] 30
-```
-
-``` r
 # Count
 count(ds, sex)
 ```
@@ -239,20 +237,19 @@ count(ds, sex)
 3 female     2
 4 male      10
 ```
----
-# Simple descriptive statistics
 
 ``` r
-# Get summary stats
-ds %&gt;% summarize(temp_min = min(temperature), temp_mean = mean(temperature), temp_max = max(temperature))
+ds$sex &lt;- tolower(ds$sex)
+
+# Count NAs
+sum(is.na(ds$temperature))
 ```
 
 ```
-# A tibble: 1 × 3
-  temp_min temp_mean temp_max
-     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
-1       NA        NA       NA
+[1] 8
 ```
+---
+# Simple descriptive statistics
 
 ``` r
 ds %&gt;% drop_na(temperature) %&gt;% summarize(temp_min = min(temperature), temp_mean = mean(temperature), temp_max = max(temperature))
@@ -275,10 +272,17 @@ summary(ds$temperature) #Also a nice option
 ```
 
 ---
+class: inverse, center, middle
+# Part 2: EDA with other packages
+
+---
 # Other helpful packages: rstatix
 
-- Pipe-friendly descriptive and inferential statistics
-- `get_summary_stats` 
+- Pipe-friendly descriptive and inferential statistics (same author as ggpubr)
+- `get_summary_stats` = flexible function for descriptive stats
+- `freq_table` = Frequency tables with proportion
+- `identify_outliers` = detects/filters outliers
+- `cor_mat` and helper functions = correlation matrices and plots
 
 ---
 # rstatix::get_summary_stats()
@@ -297,16 +301,18 @@ ds %&gt;% get_summary_stats(temperature) #Note that it drops NAs
 ```
 
 ``` r
-ds %&gt;% group_by(target) %&gt;% get_summary_stats(temperature)
+ds %&gt;% group_by(target, sex) %&gt;% get_summary_stats(temperature)
 ```
 
 ```
-# A tibble: 2 × 14
-  target   variable     n   min   max median    q1    q3   iqr   mad  mean    sd
-  &lt;chr&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-1 Diamond  tempera…    26    62    84     74  64.9    79  14.1 11.9   72.4  7.69
-2 Rectang… tempera…    26    58    92     70  65.5    77  11.5  8.90  72.0  9.11
-# ℹ 2 more variables: se &lt;dbl&gt;, ci &lt;dbl&gt;
+# A tibble: 4 × 15
+  target   sex   variable     n   min   max median    q1    q3   iqr   mad  mean
+  &lt;chr&gt;    &lt;chr&gt; &lt;fct&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1 Diamond  fema… tempera…    16  64.9    84   75.5  72    79     7    5.19  74.7
+2 Diamond  male  tempera…    10  62      83   63    63    72     9    1.48  68.6
+3 Rectang… fema… tempera…     4  75      92   83.5  75    92    17   12.6   83.5
+4 Rectang… male  tempera…    22  58      82   68    64.4  75.5  11.1  5.93  70.0
+# ℹ 3 more variables: sd &lt;dbl&gt;, se &lt;dbl&gt;, ci &lt;dbl&gt;
 ```
 
 ---
@@ -340,6 +346,76 @@ ds %&gt;% get_summary_stats(starts_with("eyex"), type = "mean_sd")
 5 eyexspeed_corr    60 -0.061 0.09 
 ```
 
+---
+# rstatix::freq_table()
+
+``` r
+ds %&gt;% freq_table(sex)
+```
+
+```
+# A tibble: 2 × 3
+  sex        n  prop
+  &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt;
+1 female    24    40
+2 male      36    60
+```
+
+``` r
+ds %&gt;% freq_table(target, sex)
+```
+
+```
+# A tibble: 4 × 4
+  target    sex        n  prop
+  &lt;chr&gt;     &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt;
+1 Diamond   female    20  66.7
+2 Diamond   male      10  33.3
+3 Rectangle female     4  13.3
+4 Rectangle male      26  86.7
+```
+---
+# rstatix::identify_outliers()
+
+``` r
+if (nrow(identify_outliers(ds, temperature)) == 0) print("No temperature outliers")
+```
+
+```
+[1] "No temperature outliers"
+```
+
+``` r
+ds %&gt;% identify_outliers(eyex_mean) %&gt;% select(id, condition, eyex_mean)
+```
+
+```
+# A tibble: 3 × 3
+     id condition eyex_mean
+  &lt;dbl&gt; &lt;chr&gt;         &lt;dbl&gt;
+1   220 walk           4.06
+2   224 walk           3.42
+3   227 search        -9.87
+```
+---
+# rstatix::cor_mat()
+
+``` r
+ds %&gt;% cor_mat(starts_with("eyex_")) %&gt;% pull_lower_triangle()
+```
+
+```
+     rowname eyex_mean eyex_std eyex_speed
+1  eyex_mean                              
+2   eyex_std     0.031                    
+3 eyex_speed      0.06    0.055           
+```
+
+``` r
+ds %&gt;% cor_mat(starts_with("eyex")) %&gt;% cor_plot()
+```
+
+![](index_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
 
 ---
 # Other helpful packages: DataExplorer
@@ -359,7 +435,7 @@ ds %&gt;% get_summary_stats(starts_with("eyex"), type = "mean_sd")
 ds %&gt;% select(condition, gazex_std:posy_speed) %&gt;% plot_histogram()
 ```
 
-![](index_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
 
 ---
 ## Data Explorer: Density plots
@@ -368,7 +444,7 @@ ds %&gt;% select(condition, gazex_std:posy_speed) %&gt;% plot_histogram()
 ds %&gt;% select(condition, gazex_std:posy_speed) %&gt;% plot_density()
 ```
 
-![](index_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
 
 ---
 ## Data Explorer: Boxplots by condition
@@ -377,7 +453,7 @@ ds %&gt;% select(condition, gazex_std:posy_speed) %&gt;% plot_density()
 ds %&gt;% select(condition, gazex_std:posy_speed) %&gt;% plot_boxplot(by = "condition")
 ```
 
-![](index_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-16-1.png)&lt;!-- --&gt;
 
 ---
 ## Data Explorer: Plot missing
@@ -386,22 +462,21 @@ ds %&gt;% select(condition, gazex_std:posy_speed) %&gt;% plot_boxplot(by = "cond
 ds %&gt;% select(id:humidity) %&gt;% plot_missing()
 ```
 
-![](index_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
 
 ---
 ## Data Explorer: Correlations
 
 ``` r
-ds %&gt;% select(condition, gazex_std:posy_speed) %&gt;% plot_correlation()
+ds %&gt;% select(gazex_std:posy_speed) %&gt;% plot_correlation()
 ```
 
-![](index_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-18-1.png)&lt;!-- --&gt;
 
 ---
 ## Data Explorer: Create Report
 
 - `create_report()` is a brute force approach, which makes every imaginable plot
-- Usually better to narrow in to make sure that you're scanning plots that make sense
 
 
 ``` r
@@ -410,9 +485,12 @@ ds %&gt;% create_report()
 ```
 
 ---
-# Other option: Make your own plots
+class: inverse, center, middle
+# Part 3: Making your own EDA plots
 
-- Introducing the `ggplot2` package
+---
+# Using `ggplot2`
+
 - Parts of a ggplot call:
 
 ``` r
@@ -438,13 +516,14 @@ ggplot(DATASET, aes(MAPPING STATEMENT)) +
 ---
 count: false
  
-Single-aesthetic plots
+Distribution plots to check ranges
 .panel1-geoms-rotate[
 
 ``` r
-ggplot(ds, aes(x = posy_std)) +
+ds %&gt;% mutate(age = ifelse(id == 103, 30, age)) %&gt;%
+ggplot(aes(x = age)) +
 * geom_histogram() +
-  xlab("Average vertical head position")
+  xlab("Age (years)")
 ```
 ]
  
@@ -455,13 +534,14 @@ ggplot(ds, aes(x = posy_std)) +
 ---
 count: false
  
-Single-aesthetic plots
+Distribution plots to check ranges
 .panel1-geoms-rotate[
 
 ``` r
-ggplot(ds, aes(x = posy_std)) +
+ds %&gt;% mutate(age = ifelse(id == 103, 30, age)) %&gt;%
+ggplot(aes(x = age)) +
 * geom_density() +
-  xlab("Average vertical head position")
+  xlab("Age (years)")
 ```
 ]
  
@@ -472,13 +552,14 @@ ggplot(ds, aes(x = posy_std)) +
 ---
 count: false
  
-Single-aesthetic plots
+Distribution plots to check ranges
 .panel1-geoms-rotate[
 
 ``` r
-ggplot(ds, aes(x = posy_std)) +
+ds %&gt;% mutate(age = ifelse(id == 103, 30, age)) %&gt;%
+ggplot(aes(x = age)) +
 * geom_boxplot() +
-  xlab("Average vertical head position")
+  xlab("Age (years)")
 ```
 ]
  
@@ -794,68 +875,6 @@ ggplot(ds, aes(x = posx_mean, y = posy_mean)) +
 ---
 count: false
  
-Add category to scatterplot
-.panel1-scatter-category-auto[
-
-``` r
-*ggplot(ds, aes(x = posx_mean, y = posy_mean, color = condition))
-```
-]
- 
-.panel2-scatter-category-auto[
-![](index_files/figure-html/scatter-category_auto_01_output-1.png)&lt;!-- --&gt;
-]
-
----
-count: false
- 
-Add category to scatterplot
-.panel1-scatter-category-auto[
-
-``` r
-ggplot(ds, aes(x = posx_mean, y = posy_mean, color = condition)) +
-* geom_point()
-```
-]
- 
-.panel2-scatter-category-auto[
-![](index_files/figure-html/scatter-category_auto_02_output-1.png)&lt;!-- --&gt;
-]
-
-&lt;style&gt;
-.panel1-scatter-category-auto {
-  color: black;
-  width: 58.8%;
-  hight: 32%;
-  float: left;
-  padding-left: 1%;
-  font-size: 80%
-}
-.panel2-scatter-category-auto {
-  color: black;
-  width: 39.2%;
-  hight: 32%;
-  float: left;
-  padding-left: 1%;
-  font-size: 80%
-}
-.panel3-scatter-category-auto {
-  color: black;
-  width: NA%;
-  hight: 33%;
-  float: left;
-  padding-left: 1%;
-  font-size: 80%
-}
-&lt;/style&gt;
-
-
-
-
-
----
-count: false
- 
 Facetting a scatterplot
 .panel1-facet-auto[
 
@@ -893,7 +912,7 @@ Facetting a scatterplot
 ``` r
 ggplot(ds, aes(x = posx_mean, y = posy_mean)) +
   geom_point() +
-* facet_wrap("condition", ncol = 1)
+* facet_wrap("condition", ncol = 2)
 ```
 ]
  
@@ -1056,9 +1075,18 @@ p1 &lt;- ggplot(ds, aes(x = posx_mean, y = posy_mean)) + geom_point()
 
 
 ---
+# Useful ggsave options
+
+- `width`, `height`, and `units` = specify the size of the saved plot
+- `device` = "png", "eps", "pdf" (but will choose based on filename)
+- `scale` = bump up the scale (1.5) if the text/lines look too big or down (.5) if text/lines look too small
+
+`ggsave("eda/output.pdf", units = "in", height = 4, width = 4, scale = .75)`
+
+---
 # Automation + plotting
 
-- Each plot you create will appear in the plots tab in RStudio
+- Each plot you create appears in the plots tab in RStudio
 
 - Flipping through a few plots is OK, but not hundreds
 
@@ -1068,43 +1096,157 @@ p1 &lt;- ggplot(ds, aes(x = posx_mean, y = posy_mean)) + geom_point()
 # Automation + plotting
 
 ``` r
+plot_dv_by_condition &lt;- function(dv) {
+  ggplot(ds, aes(fill = condition, y = .data[[dv]])) + 
+    geom_boxplot()
+}
+plot_dv_by_condition("posx_std")
+```
+
+![](index_files/figure-html/unnamed-chunk-21-1.png)&lt;!-- --&gt;
+
+``` r
+plot_dv_by_condition("posy_std")
+```
+
+![](index_files/figure-html/unnamed-chunk-21-2.png)&lt;!-- --&gt;
+---
+# Why does that work?
+
+- `ds %&gt;% .[["posx_std"]]` is the same as `ds$posx_std`
+- Double brackets let you access the column by character name
+- `.data` is a ggplot shortcut for 'the current data'
+- `y = .data[[dv]]` says 'use the name in dv to choose the y column'
+
+---
+# Make the function more useful with labels/saving
+
+``` r
+plot_dv_by_condition &lt;- function(dv) {
+  p &lt;- ggplot(ds, aes(fill = condition, y = .data[[dv]])) + 
+    geom_boxplot() + 
+    ylab(dv) + #we can also use dv to label the axis
+    ggtitle(str_glue("{dv} by condition")) + #and title the plot
+    theme(legend.position = "bottom")
+  
+  # and we can use it to write a sensible output filename
+  ggsave(str_glue("eda/by_condition/{dv}_by_condition_boxplot.jpg"), plot = p,
+         height = 6, width = 4, units = "cm", scale = 2)
+  return(p)
+}
+plot_dv_by_condition("posx_std")
+```
+
+![](index_files/figure-html/unnamed-chunk-22-1.png)&lt;!-- --&gt;
+---
+# Use colnames() to get each of the dv characters
+
+``` r
+dvs_to_plot &lt;- ds %&gt;% select(-(id:humidity)) %&gt;% colnames
+dvs_to_plot
+```
+
+```
+ [1] "len"             "gazex_std"       "gazey_std"       "posx_mean"      
+ [5] "posx_std"        "posx_speed"      "posy_mean"       "posy_std"       
+ [9] "posy_speed"      "head_speed"      "eyex_mean"       "eyex_std"       
+[13] "eyex_speed"      "eyey_mean"       "eyey_std"        "eyey_speed"     
+[17] "eye_speed"       "eyexpos_corr"    "eyeypos_corr"    "bothcent"       
+[21] "eyecent"         "headcent"        "nocent_samedir"  "nocent_oppdir"  
+[25] "path_total"      "path_speed"      "path_speed_sd"   "straightness"   
+[29] "eyexspeed_corr"  "headxspeed_corr" "gazexspeed_corr"
+```
+
+``` r
+walk(dvs_to_plot, plot_dv_by_condition)
+```
+
+---
+# What if we want to specify the type of plot?
+
+``` r
+plot_dv_by_condition &lt;- function(dv, geom = "boxplot") {
+  # Start of the ggplot
+  p &lt;- ggplot(ds) + 
+    ylab(dv) + 
+    ggtitle(str_glue("{dv} by condition")) + 
+    theme(legend.position = "bottom")
+  
+  # Add the geom based on the text argument
+  if (geom == "boxplot") p &lt;- p + geom_boxplot(aes(fill = condition, y = .data[[dv]]))
+  if (geom == "density") p &lt;- p + geom_density(aes(color = condition, x = .data[[dv]]))
+  ggsave(str_glue("eda/by_condition/{dv}_by_condition_{geom}.jpg"), plot = p,
+         height = 6, width = 4, units = "cm", scale = 2)
+  return(p)
+}
+```
+---
+# What if we want to specify the type of plot?
+
+``` r
+plot_dv_by_condition(dv = "posx_std", geom = "boxplot")
+```
+
+![](index_files/figure-html/unnamed-chunk-25-1.png)&lt;!-- --&gt;
+
+``` r
+walk(dvs_to_plot, ~ plot_dv_by_condition(dv = .x, geom = "boxplot"))
+```
+
+---
+# What if we want to specify the type of plot?
+
+``` r
+plot_dv_by_condition(dv = "posx_std", geom = "density")
+```
+
+![](index_files/figure-html/unnamed-chunk-26-1.png)&lt;!-- --&gt;
+
+``` r
+walk(dvs_to_plot, ~ plot_dv_by_condition(dv = .x, geom = "density"))
+```
+
+
+---
+# Automation + plotting with two variable inputs
+
+``` r
 two_var_scatter &lt;- function(df, var1, var2) {
-  df_to_plot &lt;- df %&gt;% 
-    select(c(var1, var2)) %&gt;% 
-    rename(var_1 = 1, var_2 = 2)
-  p &lt;- ggplot(df_to_plot, aes(x = var_1, y = var_2)) + 
+  p &lt;- ggplot(df, aes(x = .data[[var1]], y = .data[[var2]])) + 
     geom_point() + 
     xlab(var1) + 
-    ylab(var2)
-  ggsave(str_glue("eda/{var1}_{var2}.jpg"), plot = p)
+    ylab(var2) + 
+    ggtitle(str_glue("{var1} by {var2}"))
+  ggsave(str_glue("eda/scatter/{var1}_{var2}.jpg"), plot = p,
+         height = 7, width = 7, units = "cm", scale = 1.5)
   return(p)
 }
 two_var_scatter(ds, "posx_std", "posy_std")
 ```
 
-![](index_files/figure-html/unnamed-chunk-18-1.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-27-1.png)&lt;!-- --&gt;
 
 ---
-# Automation + plotting
+# Get x and y pairs from colnames
 
 ``` r
-pred_x &lt;- colnames(select(ds, posx_mean:eyey_speed)) %&gt;% keep(str_detect, "x_")
+pred_x &lt;- ds %&gt;% select(matches("x_")) %&gt;% colnames
 pred_x
 ```
 
 ```
-[1] "posx_mean"  "posx_std"   "posx_speed" "eyex_mean"  "eyex_std"  
-[6] "eyex_speed"
+[1] "gazex_std"  "posx_mean"  "posx_std"   "posx_speed" "eyex_mean" 
+[6] "eyex_std"   "eyex_speed"
 ```
 
 ``` r
-pred_y &lt;- colnames(select(ds, posx_mean:eyey_speed)) %&gt;% keep(str_detect, "y_")
+pred_y &lt;- ds %&gt;% select(matches("y_") &amp; where(is.numeric)) %&gt;% colnames
 pred_y
 ```
 
 ```
-[1] "posy_mean"  "posy_std"   "posy_speed" "eyey_mean"  "eyey_std"  
-[6] "eyey_speed"
+[1] "gazey_std"  "posy_mean"  "posy_std"   "posy_speed" "eyey_mean" 
+[6] "eyey_std"   "eyey_speed"
 ```
 
 ``` r
@@ -1116,43 +1258,83 @@ pred_x_by_y
 [[1]]
 ```
 
-![](index_files/figure-html/unnamed-chunk-19-1.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-28-1.png)&lt;!-- --&gt;
 
 ```
 
 [[2]]
 ```
 
-![](index_files/figure-html/unnamed-chunk-19-2.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-28-2.png)&lt;!-- --&gt;
 
 ```
 
 [[3]]
 ```
 
-![](index_files/figure-html/unnamed-chunk-19-3.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-28-3.png)&lt;!-- --&gt;
 
 ```
 
 [[4]]
 ```
 
-![](index_files/figure-html/unnamed-chunk-19-4.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-28-4.png)&lt;!-- --&gt;
 
 ```
 
 [[5]]
 ```
 
-![](index_files/figure-html/unnamed-chunk-19-5.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-28-5.png)&lt;!-- --&gt;
 
 ```
 
 [[6]]
 ```
 
-![](index_files/figure-html/unnamed-chunk-19-6.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-28-6.png)&lt;!-- --&gt;
 
+```
+
+[[7]]
+```
+
+![](index_files/figure-html/unnamed-chunk-28-7.png)&lt;!-- --&gt;
+
+---
+# Pivoting and faceting to automate plots
+
+``` r
+ds_long &lt;- ds %&gt;% select(matches("x_")) %&gt;% 
+  pivot_longer(cols = everything())
+
+slice_head(ds_long, n = 7)
+```
+
+```
+# A tibble: 7 × 2
+  name        value
+  &lt;chr&gt;       &lt;dbl&gt;
+1 gazex_std  15.6  
+2 posx_mean   8.69 
+3 posx_std    6.13 
+4 posx_speed  0.470
+5 eyex_mean  -0.798
+6 eyex_std   11.5  
+7 eyex_speed  1.79 
+```
+
+---
+# Pivoting and faceting to automate plots
+
+``` r
+ds_long %&gt;% ggplot(aes(x = value)) + 
+  geom_histogram() + 
+  facet_wrap(~ name, scales = "free", nrow = 2)
+```
+
+![](index_files/figure-html/unnamed-chunk-30-1.png)&lt;!-- --&gt;
 
 &lt;!-- adjust font size and other formatting defs in this css code chunk --&gt;
 &lt;style type="text/css"&gt;
@@ -1170,7 +1352,7 @@ code.r.hljs.remark-code{
 }
 
 .remark-slide-number {
-  opacity: 0; /* default: 0.5 */
+  opacity: 1; /* default: 0.5 */
 }
 
 .content-box { 
@@ -1311,6 +1493,7 @@ code.r.hljs.remark-code{
   "highlightStyle": "github",
   "highlightLines": true,
   "countIncrementalSlides": false,
+  "slideNumberFormat": "%current%",
   "navigation": {
     "scroll": false
   }

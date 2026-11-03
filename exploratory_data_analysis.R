@@ -117,14 +117,13 @@ ggsave("eda/head-position-scatter.jpg", plot = p1)
 # Automation + plotting
 
 two_var_scatter <- function(df, var1, var2) {
-  df_to_plot <- df %>% 
-    select(c(var1, var2)) %>% 
-    rename(var_1 = 1, var_2 = 2)
-  p <- ggplot(df_to_plot, aes(x = var_1, y = var_2)) + 
+  p <- ggplot(df, aes(x = .data[[var1]], y = .data[[var2]])) + 
     geom_point() + 
     xlab(var1) + 
-    ylab(var2)
-  ggsave(str_glue("eda/{var1}_{var2}.jpg"), plot = p)
+    ylab(var2) + 
+    ggtitle(str_glue("{var1}_{var2}.jpg"))
+  ggsave(str_glue("eda/{var1}_{var2}.jpg"), plot = p,
+         height = 7, width = 7, units = "cm", scale = 1.5)
   return(p)
 }
 two_var_scatter(ds, "posx_std", "posy_std")

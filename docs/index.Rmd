@@ -105,15 +105,19 @@ ds <- ds %>% relocate(test_date:humidity, .after = condition) %>% mutate(humidit
 # Today's tutorial
 
 - Ways to explore and check data
-  * `dplyr` functions like `filter()`, `summarize()`, and `count()`
-  * Helpful packages: `DataExplorer`, `rstatix`
-  * Plotting distributions using `ggplot2`
+  * Part 1: Using tools we've already covered
+  * Part 2: Using other packages: `DataExplorer`, `rstatix`
+  * Part 3: Automating `ggplot2` plots to help understand your data
  
 .content-box-blue[
 `r icons::fontawesome("github")` Follow along from the [Github repo](https://github.com/2026-PSYC-259/7-exploratory-data-analysis)
 ]
 
 .footnote[.small[.bold[Last updated: `r Sys.Date()`]]]
+
+---
+class: inverse, center, middle
+# Part 1: EDA with tools you know
 
 ---
 # Example data for today
@@ -141,7 +145,7 @@ ds %>% select(id, handedness) %>% filter(!(handedness %in% c("Right", "Left")))
 ```
 
 ---
-# Print descriptive warnings and errors
+# Print conditional warnings and errors
 ```{r}
 # Filter based on expected ranges
 check_age <- ds %>% select(id, age) %>% filter(age < 18 | age > 22)
@@ -149,7 +153,7 @@ check_age <- ds %>% select(id, age) %>% filter(age < 18 | age > 22)
 if (nrow(check_age) > 0) print(str_glue("WARNING: {nrow(check_age)} participants have ages out of the expected range"))
 ```
 ---
-# Print descriptive warnings and errors
+# Print conditional warnings and errors
 ```{r}
 # Filter based a set of possible values
 check_handedness <- ds %>% select(id, handedness) %>% filter(!(handedness %in% c("Right", "Left")))
@@ -171,20 +175,26 @@ if (length(unique(ds$id)) != 30) print("ERROR: Incomplete Dataset")
 # Count
 count(ds, sex)
 ds$sex <- tolower(ds$sex)
+
+# Count NAs
+sum(is.na(ds$temperature))
 ```
 ---
 # Simple descriptive statistics
 ```{r}
-# Get summary stats
-ds %>% summarize(temp_min = min(temperature), temp_mean = mean(temperature), temp_max = max(temperature))
 ds %>% drop_na(temperature) %>% summarize(temp_min = min(temperature), temp_mean = mean(temperature), temp_max = max(temperature))
+
 summary(ds$temperature) #Also a nice option
 ```
 
 ---
+class: inverse, center, middle
+# Part 2: EDA with other packages
+
+---
 # Other helpful packages: rstatix
 
-- Pipe-friendly descriptive and inferential statistics
+- Pipe-friendly descriptive and inferential statistics (same author as ggpubr)
 - `get_summary_stats` = flexible function for descriptive stats
 - `freq_table` = Frequency tables with proportion
 - `identify_outliers` = detects/filters outliers
@@ -267,14 +277,13 @@ ds %>% select(id:humidity) %>% plot_missing()
 ---
 ## Data Explorer: Correlations
 ```{r}
-ds %>% select(condition, gazex_std:posy_speed) %>% plot_correlation()
+ds %>% select(gazex_std:posy_speed) %>% plot_correlation()
 ```
 
 ---
 ## Data Explorer: Create Report
 
 - `create_report()` is a brute force approach, which makes every imaginable plot
-- Usually better to narrow in to make sure that you're scanning plots that make sense
 
 ```{r, eval = F}
 ds %>% create_report()
@@ -282,9 +291,12 @@ ds %>% create_report()
 ```
 
 ---
-# Other option: Make your own plots
+class: inverse, center, middle
+# Part 3: Making your own EDA plots
 
-- Introducing the `ggplot2` package
+---
+# Using `ggplot2`
+
 - Parts of a ggplot call:
 ```{r, eval = F}
 # Parts of a ggplot call
@@ -307,14 +319,15 @@ ggplot(DATASET, aes(MAPPING STATEMENT)) +
 .center[![image](aesthetics.png)]
 
 ---
-`r chunk_reveal("geoms", break_type = "rotate", widths = c(1, 1), title = "Single-aesthetic plots")`
+`r chunk_reveal("geoms", break_type = "rotate", widths = c(1, 1), title = "Distribution plots to check ranges")`
 
 ```{r geoms, include = FALSE}
-ggplot(ds, aes(x = posy_std)) + 
+ds %>% mutate(age = ifelse(id == 103, 30, age)) %>% 
+ggplot(aes(x = age)) + 
   geom_histogram() + #ROTATE
   geom_density() + #ROTATE
   geom_boxplot() + #ROTATE
-  xlab("Average vertical head position")
+  xlab("Age (years)")
 ```
 
 ---
@@ -343,20 +356,12 @@ ggplot(ds, aes(x = posx_mean, y = posy_mean)) +
 ```
 
 ---
-`r chunk_reveal("scatter-category", break_type = "auto", widths = c(1.5, 1), title = "Add category to scatterplot")`
-
-```{r scatter-category, include = FALSE}
-ggplot(ds, aes(x = posx_mean, y = posy_mean, color = condition)) + 
-  geom_point()
-```
-
----
 `r chunk_reveal("facet", break_type = "auto", widths = c(1.5, 1), title = "Facetting a scatterplot")`
 
 ```{r facet, include = FALSE}
 ggplot(ds, aes(x = posx_mean, y = posy_mean)) + 
   geom_point() + 
-  facet_wrap("condition", ncol = 1)
+  facet_wrap("condition", ncol = 2)
 ```
 
 ---
@@ -373,9 +378,18 @@ ggsave("eda/head-position-scatter.jpg", plot = p1)
 ```
 
 ---
+# Useful ggsave options
+
+- `width`, `height`, and `units` = specify the size of the saved plot
+- `device` = "png", "eps", "pdf" (but will choose based on filename)
+- `scale` = bump up the scale (1.5) if the text/lines look too big or down (.5) if text/lines look too small
+
+`ggsave("eda/output.pdf", units = "in", height = 4, width = 4, scale = .75)`
+
+---
 # Automation + plotting
 
-- Each plot you create will appear in the plots tab in RStudio
+- Each plot you create appears in the plots tab in RStudio
 
 - Flipping through a few plots is OK, but not hundreds
 
@@ -384,31 +398,122 @@ ggsave("eda/head-position-scatter.jpg", plot = p1)
 ---
 # Automation + plotting
 ```{r}
+plot_dv_by_condition <- function(dv) {
+  ggplot(ds, aes(fill = condition, y = .data[[dv]])) + 
+    geom_boxplot()
+}
+plot_dv_by_condition("posx_std")
+plot_dv_by_condition("posy_std")
+```
+---
+# Why does that work?
+
+- `ds %>% .[["posx_std"]]` is the same as `ds$posx_std`
+- Double brackets let you access the column by character name
+- `.data` is a ggplot shortcut for 'the current data'
+- `y = .data[[dv]]` says 'use the name in dv to choose the y column'
+
+---
+# Make the function more useful with labels/saving
+```{r}
+plot_dv_by_condition <- function(dv) {
+  p <- ggplot(ds, aes(fill = condition, y = .data[[dv]])) + 
+    geom_boxplot() + 
+    ylab(dv) + #we can also use dv to label the axis
+    ggtitle(str_glue("{dv} by condition")) + #and title the plot
+    theme(legend.position = "bottom")
+  
+  # and we can use it to write a sensible output filename
+  ggsave(str_glue("eda/by_condition/{dv}_by_condition_boxplot.jpg"), plot = p,
+         height = 6, width = 4, units = "cm", scale = 2)
+  return(p)
+}
+plot_dv_by_condition("posx_std")
+```
+---
+# Use colnames() to get each of the dv characters
+```{r}
+dvs_to_plot <- ds %>% select(-(id:humidity)) %>% colnames
+dvs_to_plot
+walk(dvs_to_plot, plot_dv_by_condition)
+```
+
+---
+# What if we want to specify the type of plot?
+```{r}
+plot_dv_by_condition <- function(dv, geom = "boxplot") {
+  # Start of the ggplot
+  p <- ggplot(ds) + 
+    ylab(dv) + 
+    ggtitle(str_glue("{dv} by condition")) + 
+    theme(legend.position = "bottom")
+  
+  # Add the geom based on the text argument
+  if (geom == "boxplot") p <- p + geom_boxplot(aes(fill = condition, y = .data[[dv]]))
+  if (geom == "density") p <- p + geom_density(aes(color = condition, x = .data[[dv]]))
+  ggsave(str_glue("eda/by_condition/{dv}_by_condition_{geom}.jpg"), plot = p,
+         height = 6, width = 4, units = "cm", scale = 2)
+  return(p)
+}
+```
+---
+# What if we want to specify the type of plot?
+```{r}
+plot_dv_by_condition(dv = "posx_std", geom = "boxplot")
+walk(dvs_to_plot, ~ plot_dv_by_condition(dv = .x, geom = "boxplot"))
+```
+
+---
+# What if we want to specify the type of plot?
+```{r}
+plot_dv_by_condition(dv = "posx_std", geom = "density")
+walk(dvs_to_plot, ~ plot_dv_by_condition(dv = .x, geom = "density"))
+```
+
+
+---
+# Automation + plotting with two variable inputs
+```{r}
 two_var_scatter <- function(df, var1, var2) {
-  df_to_plot <- df %>% 
-    select(c(var1, var2)) %>% 
-    rename(var_1 = 1, var_2 = 2)
-  p <- ggplot(df_to_plot, aes(x = var_1, y = var_2)) + 
+  p <- ggplot(df, aes(x = .data[[var1]], y = .data[[var2]])) + 
     geom_point() + 
     xlab(var1) + 
-    ylab(var2)
-  ggsave(str_glue("eda/{var1}_{var2}.jpg"), plot = p)
+    ylab(var2) + 
+    ggtitle(str_glue("{var1} by {var2}"))
+  ggsave(str_glue("eda/scatter/{var1}_{var2}.jpg"), plot = p,
+         height = 7, width = 7, units = "cm", scale = 1.5)
   return(p)
 }
 two_var_scatter(ds, "posx_std", "posy_std")
 ```
 
 ---
-# Automation + plotting
+# Get x and y pairs from colnames
 ```{r}
-pred_x <- colnames(select(ds, posx_mean:eyey_speed)) %>% keep(str_detect, "x_")
+pred_x <- ds %>% select(matches("x_")) %>% colnames
 pred_x
-pred_y <- colnames(select(ds, posx_mean:eyey_speed)) %>% keep(str_detect, "y_")
+pred_y <- ds %>% select(matches("y_") & where(is.numeric)) %>% colnames
 pred_y
 pred_x_by_y <- map2(pred_x, pred_y, ~ two_var_scatter(ds, .x, .y))
 pred_x_by_y
 ```
 
+---
+# Pivoting and faceting to automate plots
+```{r}
+ds_long <- ds %>% select(matches("x_")) %>% 
+  pivot_longer(cols = everything())
+
+slice_head(ds_long, n = 7)
+```
+
+---
+# Pivoting and faceting to automate plots
+```{r}
+ds_long %>% ggplot(aes(x = value)) + 
+  geom_histogram() + 
+  facet_wrap(~ name, scales = "free", nrow = 2)
+```
 
 <!-- adjust font size and other formatting defs in this css code chunk -->
 ```{css, eval = TRUE, echo = FALSE}

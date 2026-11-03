@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="" xml:lang="">
   <head>
-    <title>Using visualizations in R to explore data</title>
+    <title>Exploratory Data Analysis</title>
     <meta charset="utf-8" />
-    <meta name="author" content="John Franchak" />
-    <script src="libs/header-attrs-2.11.3/header-attrs.js"></script>
+    <meta name="author" content="John Franchak &amp; Holly O’Rourke" />
+    <script src="libs/header-attrs-2.29/header-attrs.js"></script>
     <link href="libs/tile-view-0.2.6/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view-0.2.6/tile-view.js"></script>
     <script src="libs/js-cookie-3.0.0/js.cookie.js"></script>
@@ -12,17 +12,31 @@
     <script src="libs/tiny.toast-1.0.0/toast.min.js"></script>
     <link href="libs/xaringanExtra-broadcast-0.2.6/broadcast.css" rel="stylesheet" />
     <script src="libs/xaringanExtra-broadcast-0.2.6/broadcast.js"></script>
+    <script src="libs/clipboard-2.0.6/clipboard.min.js"></script>
+    <link href="libs/xaringanExtra-clipboard-0.2.6/xaringanExtra-clipboard.css" rel="stylesheet" />
+    <script src="libs/xaringanExtra-clipboard-0.2.6/xaringanExtra-clipboard.js"></script>
+    <script>window.xaringanExtraClipboard(null, {"button":"<i class=\"fa fa-clipboard\"><\/i>","success":"<i class=\"fa fa-check\" style=\"color: #90BE6D\"><\/i>","error":"<i class=\"fa fa-times-circle\" style=\"color: #F94144\"><\/i>"})</script>
+    <link href="libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+    <link href="libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
   <body>
     <textarea id="source">
 class: center, middle, inverse, title-slide
 
-# Using visualizations in R to explore data
+.title[
+# Exploratory Data Analysis
+]
+.subtitle[
 ## PSYC 259: Principles of Data Science
-### John Franchak
+]
+.author[
+### John Franchak &amp; Holly O’Rourke
+]
 
 ---
+
+
 
 
 
@@ -42,35 +56,35 @@ class: center, middle, inverse, title-slide
   * Checking your assumptions about data quality
   * “To find the unexpected, to avoid being fooled, and to develop rich descriptions” (Behrens &amp; Yu, 2003)
 
+.footnote[.small[.bold[[Behrens &amp; Yu, 2013](https://psycnet.apa.org/record/2012-27075-002)]]]
+
 ---
 # Why do we need EDA? 
 - Summarizing = a loss of information
   * If you first look at summarized data (across trials, across participants, etc.), you may miss important patterns that exist at the raw data level
-- Statistics lie, so you need graphics
+- Statistics without graphics can be misleading
   * Correlations without looking at the scatterplot
   * Means without examining outliers/distribution
   * Statistical tests without checking *N*
-
-.footnote[.small[.bold[[Behrens &amp; Yu, 2013](https://psycnet.apa.org/record/2012-27075-002)]]]
 
 ---
 # Today's tutorial
 
 - Ways to explore and check data
   * `dplyr` functions like `filter()`, `summarize()`, and `count()`
-  * Specialized packages: `DataExplorer`
+  * Helpful packages: `DataExplorer`, `rstatix`
   * Plotting distributions using `ggplot2`
  
 .content-box-blue[
-&lt;svg viewBox="0 0 496 512" style="height:1em;position:relative;display:inline-block;top:.1em;" xmlns="http://www.w3.org/2000/svg"&gt;  &lt;path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"&gt;&lt;/path&gt;&lt;/svg&gt; Follow along from the [Github repo](https://github.com/psych-259-data-science-2022/259-exploratory-data-analysis)
+&lt;svg viewBox="0 0 496 512" style="height:1em;display:inline-block;vertical-align:-.1em;" xmlns="http://www.w3.org/2000/svg"&gt;  &lt;path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"&gt;&lt;/path&gt;&lt;/svg&gt; Follow along from the [Github repo](https://github.com/2026-PSYC-259/7-exploratory-data-analysis)
 ]
 
-.footnote[.small[.bold[Last updated: 2022-02-14]]]
+.footnote[.small[.bold[Last updated: 2026-11-03]]]
 
 ---
 # Example data for today
 
-```r
+``` r
 glimpse(ds)
 ```
 
@@ -89,7 +103,7 @@ $ ethnicity_hispanic      &lt;chr&gt; "Yes", "Yes", "No", "No", "No", "No", "No"
 $ sex                     &lt;chr&gt; "Female", "Female", "Female", "Female", "Male"…
 $ normal_corrected_vision &lt;chr&gt; "Normal", "Normal", "Normal", "Normal", "Norma…
 $ temperature             &lt;dbl&gt; NA, NA, 75.0, 75.0, 62.0, 62.0, 64.0, 64.0, 64…
-$ humidity                &lt;chr&gt; NA, NA, "0.27", "0.27", "0.22", "0.22", "0.36"…
+$ humidity                &lt;dbl&gt; NA, NA, 0.27, 0.27, 0.22, 0.22, 0.36, 0.36, 0.…
 $ len                     &lt;dbl&gt; 8023, 20152, 7092, 21344, 8606, 22818, 9448, 2…
 $ gazex_std               &lt;dbl&gt; 15.5814, 21.7167, 29.3720, 30.4992, 26.3640, 3…
 $ gazey_std               &lt;dbl&gt; 11.9732, 11.4963, 18.8811, 17.3218, 18.1747, 1…
@@ -126,7 +140,17 @@ $ gazexspeed_corr         &lt;dbl&gt; -0.2150700, -0.0406970, 0.0226160, 0.20399
 ---
 # Things we already know how to do
 
-```r
+- Use `glimpse()` to check that variables are correctly classed
+- Use `filter()` to check for values outside expected boundaries
+- Use logical statements to check assumptions
+- Use `if`...`else` to print warnings
+- Use `count()` to check frequencies
+- Use `summarize()` to look at descriptive statistics
+
+---
+# Data checks using filters
+
+``` r
 # Filter based on expected ranges
 ds %&gt;% select(id, age) %&gt;% filter(age &lt; 18 | age &gt; 22)
 ```
@@ -139,7 +163,7 @@ ds %&gt;% select(id, age) %&gt;% filter(age &lt; 18 | age &gt; 22)
 2   206    24
 ```
 
-```r
+``` r
 # Filter based a set of possible values
 ds %&gt;% select(id, handedness) %&gt;% filter(!(handedness %in% c("Right", "Left")))
 ```
@@ -151,44 +175,48 @@ ds %&gt;% select(id, handedness) %&gt;% filter(!(handedness %in% c("Right", "Lef
 1   221 &lt;NA&gt;      
 2   221 &lt;NA&gt;      
 ```
+
 ---
-# Things we already know how to do
+# Print descriptive warnings and errors
 
-```r
-# Get summary stats
-ds %&gt;% summarize(age_min = min(age), mean_age = mean(age), max_age = max(age))
-```
+``` r
+# Filter based on expected ranges
+check_age &lt;- ds %&gt;% select(id, age) %&gt;% filter(age &lt; 18 | age &gt; 22)
 
-```
-# A tibble: 1 × 3
-  age_min mean_age max_age
-    &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;
-1      NA       NA      NA
-```
-
-```r
-ds %&gt;% drop_na(age) %&gt;% summarize(age_min = min(age), mean_age = mean(age), max_age = max(age))
+if (nrow(check_age) &gt; 0) print(str_glue("WARNING: {nrow(check_age)} participants have ages out of the expected range"))
 ```
 
 ```
-# A tibble: 1 × 3
-  age_min mean_age max_age
-    &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;
-1      18     19.9      24
-```
-
-```r
-summary(ds$age) #Also a nice option
-```
-
-```
-   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-  18.00   19.00   20.00   19.86   21.00   24.00       2 
+WARNING: 2 participants have ages out of the expected range
 ```
 ---
-# Things we already know how to do
+# Print descriptive warnings and errors
 
-```r
+``` r
+# Filter based a set of possible values
+check_handedness &lt;- ds %&gt;% select(id, handedness) %&gt;% filter(!(handedness %in% c("Right", "Left")))
+
+if (nrow(check_handedness) &gt; 0) {
+  print("Handedness check FAILED")
+  print(check_handedness)
+} else {
+  print("Handedness check PASSED")
+}
+```
+
+```
+[1] "Handedness check FAILED"
+# A tibble: 2 × 2
+     id handedness
+  &lt;dbl&gt; &lt;chr&gt;     
+1   221 &lt;NA&gt;      
+2   221 &lt;NA&gt;      
+```
+
+---
+# Checking for expected counts
+
+``` r
 # Check the number of participant ids
 length(unique(ds$id)) # Should be 30
 ```
@@ -197,7 +225,7 @@ length(unique(ds$id)) # Should be 30
 [1] 30
 ```
 
-```r
+``` r
 # Count
 count(ds, sex)
 ```
@@ -206,69 +234,168 @@ count(ds, sex)
 # A tibble: 4 × 2
   sex        n
   &lt;chr&gt;  &lt;int&gt;
-1 female     2
-2 Female    22
-3 male      10
-4 Male      26
+1 Female    22
+2 Male      26
+3 female     2
+4 male      10
+```
+---
+# Simple descriptive statistics
+
+``` r
+# Get summary stats
+ds %&gt;% summarize(temp_min = min(temperature), temp_mean = mean(temperature), temp_max = max(temperature))
+```
+
+```
+# A tibble: 1 × 3
+  temp_min temp_mean temp_max
+     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+1       NA        NA       NA
+```
+
+``` r
+ds %&gt;% drop_na(temperature) %&gt;% summarize(temp_min = min(temperature), temp_mean = mean(temperature), temp_max = max(temperature))
+```
+
+```
+# A tibble: 1 × 3
+  temp_min temp_mean temp_max
+     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+1       58      72.2       92
+```
+
+``` r
+summary(ds$temperature) #Also a nice option
+```
+
+```
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+  58.00   64.90   71.50   72.21   79.00   92.00       8 
 ```
 
 ---
-# Other ways to explore data
+# Other helpful packages: rstatix
 
-- `DataExplorer` package
-  * Quickly generate EDA plots for every column in your dataset
-  * `plot_histogram` and `plot_density` for continuous variables
-  * `plot_bar` for categorical
-  * `plot_boxplot` for detecting outliers
-  * `plot_missing` for missingness
-  * `plot_correlation` for between-column correlations at a glance
-  * `create_report` for everything
-- What it's not for: making publication-ready plots
+- Pipe-friendly descriptive and inferential statistics
+- `get_summary_stats` 
+
+---
+# rstatix::get_summary_stats()
+
+``` r
+# Get summary stats
+ds %&gt;% get_summary_stats(temperature) #Note that it drops NAs
+```
+
+```
+# A tibble: 1 × 13
+  variable        n   min   max median    q1    q3   iqr   mad  mean    sd    se
+  &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1 temperature    52    58    92   71.5  64.9    79  14.1  10.5  72.2  8.35  1.16
+# ℹ 1 more variable: ci &lt;dbl&gt;
+```
+
+``` r
+ds %&gt;% group_by(target) %&gt;% get_summary_stats(temperature)
+```
+
+```
+# A tibble: 2 × 14
+  target   variable     n   min   max median    q1    q3   iqr   mad  mean    sd
+  &lt;chr&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1 Diamond  tempera…    26    62    84     74  64.9    79  14.1 11.9   72.4  7.69
+2 Rectang… tempera…    26    58    92     70  65.5    77  11.5  8.90  72.0  9.11
+# ℹ 2 more variables: se &lt;dbl&gt;, ci &lt;dbl&gt;
+```
+
+---
+# rstatix::get_summary_stats()
+
+``` r
+# Specify multiple variables and types of output stats
+ds %&gt;% get_summary_stats(c("temperature", "humidity"), type = "common")
+```
+
+```
+# A tibble: 2 × 10
+  variable        n   min   max median   iqr  mean    sd    se    ci
+  &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1 temperature    52 58    92     71.5  14.1  72.2  8.35  1.16  2.32 
+2 humidity       50  0.22  0.69   0.42  0.15  0.44 0.111 0.016 0.032
+```
+
+``` r
+ds %&gt;% get_summary_stats(starts_with("eyex"), type = "mean_sd")
+```
+
+```
+# A tibble: 5 × 4
+  variable           n   mean    sd
+  &lt;fct&gt;          &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+1 eyex_mean         60 -2.87  2.64 
+2 eyex_std          60 12.2   2.12 
+3 eyex_speed        60  1.51  0.535
+4 eyexpos_corr      60  0.455 0.165
+5 eyexspeed_corr    60 -0.061 0.09 
+```
+
+
+---
+# Other helpful packages: DataExplorer
+
+- Quickly generate EDA plots for every column in your dataset
+- `plot_histogram` and `plot_density` for continuous variables
+- `plot_bar` for categorical
+- `plot_boxplot` for detecting outliers
+- `plot_missing` for missingness
+- `plot_correlation` for between-column correlations at a glance
+- `create_report` for everything
 
 ---
 ## Data Explorer: Histograms
 
-```r
+``` r
 ds %&gt;% select(condition, gazex_std:posy_speed) %&gt;% plot_histogram()
 ```
 
-![](index_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
 
 ---
 ## Data Explorer: Density plots
 
-```r
+``` r
 ds %&gt;% select(condition, gazex_std:posy_speed) %&gt;% plot_density()
 ```
 
-![](index_files/figure-html/unnamed-chunk-8-1.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
 
 ---
 ## Data Explorer: Boxplots by condition
 
-```r
+``` r
 ds %&gt;% select(condition, gazex_std:posy_speed) %&gt;% plot_boxplot(by = "condition")
 ```
 
-![](index_files/figure-html/unnamed-chunk-9-1.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
 
 ---
 ## Data Explorer: Plot missing
 
-```r
+``` r
 ds %&gt;% select(id:humidity) %&gt;% plot_missing()
 ```
 
-![](index_files/figure-html/unnamed-chunk-10-1.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
 
 ---
 ## Data Explorer: Correlations
 
-```r
+``` r
 ds %&gt;% select(condition, gazex_std:posy_speed) %&gt;% plot_correlation()
 ```
 
-![](index_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
 
 ---
 ## Data Explorer: Create Report
@@ -277,7 +404,7 @@ ds %&gt;% select(condition, gazex_std:posy_speed) %&gt;% plot_correlation()
 - Usually better to narrow in to make sure that you're scanning plots that make sense
 
 
-```r
+``` r
 ds %&gt;% create_report()
 # Saves an html report to your working directory
 ```
@@ -288,7 +415,7 @@ ds %&gt;% create_report()
 - Introducing the `ggplot2` package
 - Parts of a ggplot call:
 
-```r
+``` r
 # Parts of a ggplot call
 ggplot(DATASET, aes(MAPPING STATEMENT)) + 
   geom_TYPE() + 
@@ -314,7 +441,7 @@ count: false
 Single-aesthetic plots
 .panel1-geoms-rotate[
 
-```r
+``` r
 ggplot(ds, aes(x = posy_std)) +
 * geom_histogram() +
   xlab("Average vertical head position")
@@ -331,7 +458,7 @@ count: false
 Single-aesthetic plots
 .panel1-geoms-rotate[
 
-```r
+``` r
 ggplot(ds, aes(x = posy_std)) +
 * geom_density() +
   xlab("Average vertical head position")
@@ -348,7 +475,7 @@ count: false
 Single-aesthetic plots
 .panel1-geoms-rotate[
 
-```r
+``` r
 ggplot(ds, aes(x = posy_std)) +
 * geom_boxplot() +
   xlab("Average vertical head position")
@@ -396,7 +523,7 @@ count: false
 Add a category
 .panel1-categorical-rotate[
 
-```r
+``` r
 ggplot(ds) +
 *geom_boxplot(aes(y = posy_std))
 ```
@@ -412,7 +539,7 @@ count: false
 Add a category
 .panel1-categorical-rotate[
 
-```r
+``` r
 ggplot(ds) +
 *geom_boxplot(aes(x = condition, y = posy_std))
 ```
@@ -428,7 +555,7 @@ count: false
 Add a category
 .panel1-categorical-rotate[
 
-```r
+``` r
 ggplot(ds) +
 *geom_boxplot(aes(x = condition, y = posy_std, fill = condition))
 ```
@@ -444,7 +571,7 @@ count: false
 Add a category
 .panel1-categorical-rotate[
 
-```r
+``` r
 ggplot(ds) +
 *geom_boxplot(aes(x = condition, y = posy_std, fill = target))
 ```
@@ -491,7 +618,7 @@ count: false
 Simple scatterplot
 .panel1-scatterplot-auto[
 
-```r
+``` r
 *ggplot(ds, aes(x = posx_mean, y = posy_mean))
 ```
 ]
@@ -506,7 +633,7 @@ count: false
 Simple scatterplot
 .panel1-scatterplot-auto[
 
-```r
+``` r
 ggplot(ds, aes(x = posx_mean, y = posy_mean)) +
 * geom_point()
 ```
@@ -522,7 +649,7 @@ count: false
 Simple scatterplot
 .panel1-scatterplot-auto[
 
-```r
+``` r
 ggplot(ds, aes(x = posx_mean, y = posy_mean)) +
   geom_point() +
 * xlim(-20, 20)
@@ -539,7 +666,7 @@ count: false
 Simple scatterplot
 .panel1-scatterplot-auto[
 
-```r
+``` r
 ggplot(ds, aes(x = posx_mean, y = posy_mean)) +
   geom_point() +
   xlim(-20, 20) +
@@ -557,7 +684,7 @@ count: false
 Simple scatterplot
 .panel1-scatterplot-auto[
 
-```r
+``` r
 ggplot(ds, aes(x = posx_mean, y = posy_mean)) +
   geom_point() +
   xlim(-20, 20) +
@@ -576,7 +703,7 @@ count: false
 Simple scatterplot
 .panel1-scatterplot-auto[
 
-```r
+``` r
 ggplot(ds, aes(x = posx_mean, y = posy_mean)) +
   geom_point() +
   xlim(-20, 20) +
@@ -596,7 +723,7 @@ count: false
 Simple scatterplot
 .panel1-scatterplot-auto[
 
-```r
+``` r
 ggplot(ds, aes(x = posx_mean, y = posy_mean)) +
   geom_point() +
   xlim(-20, 20) +
@@ -617,7 +744,7 @@ count: false
 Simple scatterplot
 .panel1-scatterplot-auto[
 
-```r
+``` r
 ggplot(ds, aes(x = posx_mean, y = posy_mean)) +
   geom_point() +
   xlim(-20, 20) +
@@ -670,7 +797,7 @@ count: false
 Add category to scatterplot
 .panel1-scatter-category-auto[
 
-```r
+``` r
 *ggplot(ds, aes(x = posx_mean, y = posy_mean, color = condition))
 ```
 ]
@@ -685,7 +812,7 @@ count: false
 Add category to scatterplot
 .panel1-scatter-category-auto[
 
-```r
+``` r
 ggplot(ds, aes(x = posx_mean, y = posy_mean, color = condition)) +
 * geom_point()
 ```
@@ -732,7 +859,7 @@ count: false
 Facetting a scatterplot
 .panel1-facet-auto[
 
-```r
+``` r
 *ggplot(ds, aes(x = posx_mean, y = posy_mean))
 ```
 ]
@@ -747,7 +874,7 @@ count: false
 Facetting a scatterplot
 .panel1-facet-auto[
 
-```r
+``` r
 ggplot(ds, aes(x = posx_mean, y = posy_mean)) +
 * geom_point()
 ```
@@ -763,7 +890,7 @@ count: false
 Facetting a scatterplot
 .panel1-facet-auto[
 
-```r
+``` r
 ggplot(ds, aes(x = posx_mean, y = posy_mean)) +
   geom_point() +
 * facet_wrap("condition", ncol = 1)
@@ -811,7 +938,7 @@ count: false
 Saving plots
 .panel1-saving-auto[
 
-```r
+``` r
 *ggplot(ds, aes(x = posx_mean, y = posy_mean)) + geom_point()
 ```
 ]
@@ -826,7 +953,7 @@ count: false
 Saving plots
 .panel1-saving-auto[
 
-```r
+``` r
 ggplot(ds, aes(x = posx_mean, y = posy_mean)) + geom_point()
 #ggsave will save the last plot to file
 *ggsave("eda/head-position-scatter.jpg")
@@ -843,7 +970,7 @@ count: false
 Saving plots
 .panel1-saving-auto[
 
-```r
+``` r
 ggplot(ds, aes(x = posx_mean, y = posy_mean)) + geom_point()
 #ggsave will save the last plot to file
 ggsave("eda/head-position-scatter.jpg")
@@ -862,7 +989,7 @@ count: false
 Saving plots
 .panel1-saving-auto[
 
-```r
+``` r
 ggplot(ds, aes(x = posx_mean, y = posy_mean)) + geom_point()
 #ggsave will save the last plot to file
 ggsave("eda/head-position-scatter.jpg")
@@ -882,7 +1009,7 @@ count: false
 Saving plots
 .panel1-saving-auto[
 
-```r
+``` r
 ggplot(ds, aes(x = posx_mean, y = posy_mean)) + geom_point()
 #ggsave will save the last plot to file
 ggsave("eda/head-position-scatter.jpg")
@@ -940,7 +1067,7 @@ p1 &lt;- ggplot(ds, aes(x = posx_mean, y = posy_mean)) + geom_point()
 ---
 # Automation + plotting
 
-```r
+``` r
 two_var_scatter &lt;- function(df, var1, var2) {
   df_to_plot &lt;- df %&gt;% 
     select(c(var1, var2)) %&gt;% 
@@ -955,12 +1082,12 @@ two_var_scatter &lt;- function(df, var1, var2) {
 two_var_scatter(ds, "posx_std", "posy_std")
 ```
 
-![](index_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-18-1.png)&lt;!-- --&gt;
 
 ---
 # Automation + plotting
 
-```r
+``` r
 pred_x &lt;- colnames(select(ds, posx_mean:eyey_speed)) %&gt;% keep(str_detect, "x_")
 pred_x
 ```
@@ -970,7 +1097,7 @@ pred_x
 [6] "eyex_speed"
 ```
 
-```r
+``` r
 pred_y &lt;- colnames(select(ds, posx_mean:eyey_speed)) %&gt;% keep(str_detect, "y_")
 pred_y
 ```
@@ -980,7 +1107,7 @@ pred_y
 [6] "eyey_speed"
 ```
 
-```r
+``` r
 pred_x_by_y &lt;- map2(pred_x, pred_y, ~ two_var_scatter(ds, .x, .y))
 pred_x_by_y
 ```
@@ -989,42 +1116,42 @@ pred_x_by_y
 [[1]]
 ```
 
-![](index_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-19-1.png)&lt;!-- --&gt;
 
 ```
 
 [[2]]
 ```
 
-![](index_files/figure-html/unnamed-chunk-15-2.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-19-2.png)&lt;!-- --&gt;
 
 ```
 
 [[3]]
 ```
 
-![](index_files/figure-html/unnamed-chunk-15-3.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-19-3.png)&lt;!-- --&gt;
 
 ```
 
 [[4]]
 ```
 
-![](index_files/figure-html/unnamed-chunk-15-4.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-19-4.png)&lt;!-- --&gt;
 
 ```
 
 [[5]]
 ```
 
-![](index_files/figure-html/unnamed-chunk-15-5.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-19-5.png)&lt;!-- --&gt;
 
 ```
 
 [[6]]
 ```
 
-![](index_files/figure-html/unnamed-chunk-15-6.png)&lt;!-- --&gt;
+![](index_files/figure-html/unnamed-chunk-19-6.png)&lt;!-- --&gt;
 
 
 &lt;!-- adjust font size and other formatting defs in this css code chunk --&gt;
@@ -1180,13 +1307,13 @@ code.r.hljs.remark-code{
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
-"ratio": "16:9",
-"highlightStyle": "github",
-"highlightLines": true,
-"countIncrementalSlides": false,
-"navigation": {
-"scroll": false
-}
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false,
+  "navigation": {
+    "scroll": false
+  }
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
@@ -1227,6 +1354,19 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     deleted = true;
   });
 })();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
 (function() {
   "use strict"
   // Replace <script> tags in slides area to make them executable

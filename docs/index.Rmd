@@ -1,7 +1,7 @@
 ---
-title: "Using visualizations in R to explore data"
+title: "Exploratory Data Analysis"
 subtitle: "PSYC 259: Principles of Data Science"
-author: "John Franchak"
+author: "John Franchak & Holly O'Rourke"
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -16,6 +16,18 @@ output:
 ---
 ```{r xaringanExtra, echo=FALSE}
 xaringanExtra::use_xaringan_extra(c("tile_view","broadcast"))
+#xaringan::decktape("docs/index.html", "slides.pdf")
+```
+
+```{r xaringanExtra-clipboard, echo=FALSE}
+htmltools::tagList(
+  xaringanExtra::use_clipboard(
+    button_text = "<i class=\"fa fa-clipboard\"></i>",
+    success_text = "<i class=\"fa fa-check\" style=\"color: #90BE6D\"></i>",
+    error_text = "<i class=\"fa fa-times-circle\" style=\"color: #F94144\"></i>"
+  ),
+  rmarkdown::html_dependency_font_awesome()
+)
 ```
 
 ```{r xaringan-themer, include=FALSE, warning=FALSE}
@@ -31,6 +43,16 @@ style_mono_accent(
   header_h1_font_size = "3rem",
   header_h2_font_size = "2.5rem",
   header_h3_font_size = "2rem",
+  text_slide_number_color = "#1c5253",
+  text_slide_number_font_size = "0.9em",
+  padding = "6px 36px 6px 36px",
+  extra_css = list(
+    ".remark-slide-content h1" = list("margin-bottom" = "0.3em"),
+    ".pull-left"  = list(width = "49%"),
+    ".pull-right" = list(width = "49%"),
+    ".col-text" = list(float = "left",  width = "30%"),
+    ".col-img"  = list(float = "right", width = "68%"),
+    ".col-img ~ *" = list(clear = "both"))
 )
 ```
 
@@ -40,6 +62,7 @@ library(flipbookr)
 library(icons)
 library(tidyverse)
 library(DataExplorer)
+library(rstatix)
 library(here)
 ```
 
@@ -53,7 +76,7 @@ ds <- ds %>% pivot_longer(-id, names_to = "variable", values_to = "value") %>%
          variable = str_remove_all(variable, "search_"))
 ds <- ds %>% pivot_wider(id_cols = c("id", "condition"), names_from = "variable", values_from = "value")
 ds <- left_join(ds, demo, by = c("id" = "subject_number"))
-ds <- ds %>% relocate(test_date:humidity, .after = condition)
+ds <- ds %>% relocate(test_date:humidity, .after = condition) %>% mutate(humidity = as.numeric(humidity))
 ```
 
 # CDA vs. EDA
@@ -66,27 +89,27 @@ ds <- ds %>% relocate(test_date:humidity, .after = condition)
   * Checking your assumptions about data quality
   * “To find the unexpected, to avoid being fooled, and to develop rich descriptions” (Behrens & Yu, 2003)
 
+.footnote[.small[.bold[[Behrens & Yu, 2013](https://psycnet.apa.org/record/2012-27075-002)]]]
+
 ---
 # Why do we need EDA? 
 - Summarizing = a loss of information
   * If you first look at summarized data (across trials, across participants, etc.), you may miss important patterns that exist at the raw data level
-- Statistics lie, so you need graphics
+- Statistics without graphics can be misleading
   * Correlations without looking at the scatterplot
   * Means without examining outliers/distribution
   * Statistical tests without checking *N*
-
-.footnote[.small[.bold[[Behrens & Yu, 2013](https://psycnet.apa.org/record/2012-27075-002)]]]
 
 ---
 # Today's tutorial
 
 - Ways to explore and check data
   * `dplyr` functions like `filter()`, `summarize()`, and `count()`
-  * Specialized packages: `DataExplorer`
+  * Helpful packages: `DataExplorer`, `rstatix`
   * Plotting distributions using `ggplot2`
  
 .content-box-blue[
-`r icons::fontawesome("github")` Follow along from the [Github repo](https://github.com/psych-259-data-science-2022/259-exploratory-data-analysis)
+`r icons::fontawesome("github")` Follow along from the [Github repo](https://github.com/2026-PSYC-259/7-exploratory-data-analysis)
 ]
 
 .footnote[.small[.bold[Last updated: `r Sys.Date()`]]]
@@ -99,41 +122,97 @@ glimpse(ds)
 
 ---
 # Things we already know how to do
+
+- Use `glimpse()` to check that variables are correctly classed
+- Use `filter()` to check for values outside expected boundaries
+- Use logical statements to check assumptions
+- Use `if`...`else` to print warnings
+- Use `count()` to check frequencies
+- Use `summarize()` to look at descriptive statistics
+
+---
+# Data checks using filters
 ```{r}
 # Filter based on expected ranges
 ds %>% select(id, age) %>% filter(age < 18 | age > 22)
 # Filter based a set of possible values
 ds %>% select(id, handedness) %>% filter(!(handedness %in% c("Right", "Left")))
 ```
+
 ---
-# Things we already know how to do
+# Print descriptive warnings and errors
 ```{r}
-# Get summary stats
-ds %>% summarize(age_min = min(age), mean_age = mean(age), max_age = max(age))
-ds %>% drop_na(age) %>% summarize(age_min = min(age), mean_age = mean(age), max_age = max(age))
-summary(ds$age) #Also a nice option
+# Filter based on expected ranges
+check_age <- ds %>% select(id, age) %>% filter(age < 18 | age > 22)
+
+if (nrow(check_age) > 0) print(str_glue("WARNING: {nrow(check_age)} participants have ages out of the expected range"))
 ```
 ---
-# Things we already know how to do
+# Print descriptive warnings and errors
+```{r}
+# Filter based a set of possible values
+check_handedness <- ds %>% select(id, handedness) %>% filter(!(handedness %in% c("Right", "Left")))
+
+if (nrow(check_handedness) > 0) {
+  print("Handedness check FAILED")
+  print(check_handedness)
+} else {
+  print("Handedness check PASSED")
+}
+```
+
+---
+# Checking for expected counts
 ```{r}
 # Check the number of participant ids
-length(unique(ds$id)) # Should be 30
+if (length(unique(ds$id)) != 30) print("ERROR: Incomplete Dataset")
+
 # Count
 count(ds, sex)
 ```
+---
+# Simple descriptive statistics
+```{r}
+# Get summary stats
+ds %>% summarize(temp_min = min(temperature), temp_mean = mean(temperature), temp_max = max(temperature))
+ds %>% drop_na(temperature) %>% summarize(temp_min = min(temperature), temp_mean = mean(temperature), temp_max = max(temperature))
+summary(ds$temperature) #Also a nice option
+```
 
 ---
-# Other ways to explore data
+# Other helpful packages: rstatix
 
-- `DataExplorer` package
-  * Quickly generate EDA plots for every column in your dataset
-  * `plot_histogram` and `plot_density` for continuous variables
-  * `plot_bar` for categorical
-  * `plot_boxplot` for detecting outliers
-  * `plot_missing` for missingness
-  * `plot_correlation` for between-column correlations at a glance
-  * `create_report` for everything
-- What it's not for: making publication-ready plots
+- Pipe-friendly descriptive and inferential statistics
+- `get_summary_stats` 
+
+---
+# rstatix::get_summary_stats()
+```{r}
+# Get summary stats
+ds %>% get_summary_stats(temperature) #Note that it drops NAs
+ds %>% group_by(target) %>% get_summary_stats(temperature)
+```
+
+---
+# rstatix::get_summary_stats()
+```{r}
+# Specify multiple variables and types of output stats
+ds %>% get_summary_stats(c("temperature", "humidity"), type = "common")
+
+ds %>% get_summary_stats(starts_with("eyex"), type = "mean_sd")
+```
+
+
+---
+# Other helpful packages: DataExplorer
+
+- Quickly generate EDA plots for every column in your dataset
+- `plot_histogram` and `plot_density` for continuous variables
+- `plot_bar` for categorical
+- `plot_boxplot` for detecting outliers
+- `plot_missing` for missingness
+- `plot_correlation` for between-column correlations at a glance
+- `create_report` for everything
 
 ---
 ## Data Explorer: Histograms

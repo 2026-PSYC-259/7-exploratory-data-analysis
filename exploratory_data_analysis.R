@@ -213,6 +213,24 @@ walk(dvs_to_plot, ~ plot_dv_by_condition(dv = .x, geom = "boxplot"))
 plot_dv_by_condition(dv = "posx_std", geom = "density")
 walk(dvs_to_plot, ~ plot_dv_by_condition(dv = .x, geom = "density"))
 
+# What if we want to plot subsets of data?
+plot_filtered_histogram <- function(dv, cond = "All") {
+  # Use an if/else to create a subset of data if condition is provided
+  if (cond == "All") {
+    temp_data <- ds
+  } else {
+    temp_data <- ds %>% filter(condition == cond)
+  }
+  # Plot based on the subset
+  p <- ggplot(temp_data, aes(x = .data[[dv]])) + 
+    geom_histogram() + 
+    ggtitle(str_glue("Histogram of {dv} for condition: {cond}"))
+  return(p)
+}
+plot_filtered_histogram(dv = "path_total", cond = "search")
+plot_filtered_histogram(dv = "path_total", cond = "walk")
+plot_filtered_histogram(dv = "path_total")
+
 # Automation + plotting with two variable inputs ----
 
 two_var_scatter <- function(df, var1, var2) {

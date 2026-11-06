@@ -102,6 +102,71 @@ ds <- ds %>% relocate(test_date:humidity, .after = condition) %>% mutate(humidit
   * Statistical tests without checking *N*
 
 ---
+# Data analysis pipeline
+
+```{r, echo=FALSE}
+library(DiagrammeR)
+
+grViz("
+digraph workflow {
+  graph [layout = dot, rankdir = LR, bgcolor = 'transparent']
+  # Global node styling
+  node [shape = box, style = 'filled,rounded', fillcolor = '#E8F0FE', 
+        color = '#1A73E8', fontname = 'Helvetica', fontsize = 14, 
+        margin = '0.25,0.15']
+  # Nodes
+  # 1. Data nodes (distinct color: soft amber/orange)
+  raw     [label = 'Raw Data',     fillcolor = '#FEF7E0', color = '#F29900']
+  cleaned [label = 'Cleaned Data', fillcolor = '#FEF7E0', color = '#F29900']
+  # 2. Process / Analysis nodes (inherit the default blue above)
+  cleaning     [label = 'Data Cleaning']
+  descriptives [label = 'Descriptives & Plots']
+  confirmatory [label = 'Models']
+  # Edges
+  # Forward pipeline (defines the horizontal line)
+  raw -> cleaning -> cleaned -> descriptives -> confirmatory
+  # Feedback edges (constraint = false preserves the straight line)
+  # ':s' routes the curved arrows underneath the boxes
+  descriptives:s -> cleaning:s [constraint = false, color = '#FFFFFF', style = 'dashed']
+  confirmatory:s -> cleaning:s [constraint = false, color = '#FFFFFF', style = 'dashed']
+}
+", width = "100%")
+```
+
+---
+# Data analysis pipeline
+
+```{r, echo=FALSE}
+library(DiagrammeR)
+
+grViz("
+digraph workflow {
+  graph [layout = dot, rankdir = LR, bgcolor = 'transparent']
+  # Global node styling
+  node [shape = box, style = 'filled,rounded', fillcolor = '#E8F0FE', 
+        color = '#1A73E8', fontname = 'Helvetica', fontsize = 14, 
+        margin = '0.25,0.15']
+  # Nodes
+  # 1. Data nodes (distinct color: soft amber/orange)
+  raw     [label = 'Raw Data',     fillcolor = '#FEF7E0', color = '#F29900']
+  cleaned [label = 'Cleaned Data', fillcolor = '#FEF7E0', color = '#F29900']
+  # 2. Process / Analysis nodes (inherit the default blue above)
+  cleaning     [label = 'Data Cleaning']
+  descriptives [label = 'Descriptives & Plots']
+  confirmatory [label = 'Models']
+  # Edges
+  # Forward pipeline (defines the horizontal line)
+  raw -> cleaning -> cleaned -> descriptives -> confirmatory
+  # Feedback edges (constraint = false preserves the straight line)
+  # ':s' routes the curved arrows underneath the boxes
+  descriptives:s -> cleaning:s [constraint = false, color = '#70757A', style = 'dashed']
+  confirmatory:s -> cleaning:s [constraint = false, color = '#70757A', style = 'dashed']
+}
+", width = "100%")
+```
+
+
+---
 # Today's tutorial
 
 - Ways to explore and check data
@@ -470,9 +535,44 @@ plot_dv_by_condition(dv = "posx_std", geom = "density")
 walk(dvs_to_plot, ~ plot_dv_by_condition(dv = .x, geom = "density"))
 ```
 
+---
+# What if we want to plot subsets of data?
+```{r}
+plot_filtered_histogram <- function(dv, cond = "All") {
+  # Use an if/else to create a subset of data if condition is provided
+  if (cond == "All") {
+    temp_data <- ds
+  } else {
+    temp_data <- ds %>% filter(condition == cond)
+  }
+  
+  # Plot based on the subset
+  p <- ggplot(temp_data, aes(x = .data[[dv]])) + 
+    geom_histogram() + 
+    ggtitle(str_glue("Histogram of {dv} for condition: {cond}"))
+
+  return(p)
+}
+```
 
 ---
-# Automation + plotting with two variable inputs
+# What if we want to plot subsets of data?
+```{r}
+plot_filtered_histogram(dv = "path_total", cond = "search")
+```
+---
+# What if we want to plot subsets of data?
+```{r}
+plot_filtered_histogram(dv = "path_total", cond = "walk")
+```
+---
+# What if we want to plot subsets of data?
+```{r}
+plot_filtered_histogram(dv = "path_total")
+```
+
+---
+# Two variable inputs
 ```{r}
 two_var_scatter <- function(df, var1, var2) {
   p <- ggplot(df, aes(x = .data[[var1]], y = .data[[var2]])) + 
